@@ -15,4 +15,11 @@
   <export>
     <build_type>ament_cmake</build_type>
   </export>
+
+<depend>rclpy</depend>
+<depend>robot_state_publisher</depend>
+<depend>joint_state_publisher</depend>
+<depend>gazebo_ros</depend>
+<depend>xacro</depend>
+
 </package>

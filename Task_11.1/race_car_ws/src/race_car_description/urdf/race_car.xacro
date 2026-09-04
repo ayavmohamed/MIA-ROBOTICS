@@ -1,0 +1,232 @@
+<?xml version="1.0"?>
+
+<robot name="race_car" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- ==================== Materials ==================== -->
+
+  <!-- Material for the car body -->
+  <material name="car_blue">
+    <color rgba="0.0 0.3 1.0 1.0"/>
+  </material>
+
+  <!-- Material for the wheels -->
+  <material name="wheel_black">
+    <color rgba="0.05 0.05 0.05 1.0"/>
+  </material>
+
+  <!-- Material for the camera -->
+  <material name="camera_red">
+    <color rgba="1.0 0.0 0.0 1.0"/>
+  </material>
+
+  <!-- ==================== Base Link ==================== -->
+  <!-- Main body of the race car -->
+  <link name="base_link">
+
+    <!-- Visual representation -->
+    <visual>
+      <geometry>
+        <box size="2.0 1.0 0.4"/>
+      </geometry>
+      <material name="car_blue"/>
+    </visual>
+
+    <!-- Collision geometry -->
+    <collision>
+      <geometry>
+        <box size="2.0 1.0 0.4"/>
+      </geometry>
+    </collision>
+
+    <!-- Physical properties -->
+    <inertial>
+      <mass value="10.0"/>
+
+      <inertia
+        ixx="1.0"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="1.0"
+        iyz="0.0"
+        izz="1.0"/>
+    </inertial>
+
+  </link>
+
+
+  <!-- ==================== Wheel Macro ==================== -->
+  <!--
+    This macro creates a wheel and its continuous joint.
+    Parameters:
+      name - wheel name
+      x    - position along the X axis
+      y    - position along the Y axis
+  -->
+  <xacro:macro name="wheel" params="name x y">
+
+  <link name="${name}_wheel">
+
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.3" length="0.2"/>
+      </geometry>
+      <material name="wheel_black"/>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.3" length="0.2"/>
+      </geometry>
+    </collision>
+
+    <inertial>
+      <mass value="1.0"/>
+      <inertia
+        ixx="0.05"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.05"
+        iyz="0.0"
+        izz="0.05"/>
+    </inertial>
+
+  </link>
+
+  <joint name="${name}_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="${name}_wheel"/>
+    <origin xyz="${x} ${y} 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+</xacro:macro>
+
+
+  <!-- ==================== Four Wheels ==================== -->
+
+  <!-- Front wheels -->
+  <xacro:wheel name="front_left"  x="0.7"  y="0.6"/>
+  <xacro:wheel name="front_right" x="0.7"  y="-0.6"/>
+
+  <!-- Rear wheels -->
+  <xacro:wheel name="rear_left"   x="-0.7" y="0.6"/>
+  <xacro:wheel name="rear_right"  x="-0.7" y="-0.6"/>
+
+<!-- ==================== Camera ==================== -->
+
+  <!-- Camera link mounted at the front of the car -->
+  <link name="camera_link">
+
+    <!-- Visual representation of the camera -->
+    <visual>
+      <geometry>
+        <box size="0.2 0.2 0.2"/>
+      </geometry>
+      <material name="camera_red"/>
+    </visual>
+
+    <!-- Collision geometry -->
+    <collision>
+      <geometry>
+        <box size="0.2 0.2 0.2"/>
+      </geometry>
+    </collision>
+
+    <!-- Physical properties -->
+    <inertial>
+      <mass value="0.2"/>
+
+      <inertia
+        ixx="0.001"
+        ixy="0.0"
+        ixz="0.0"
+        iyy="0.001"
+        iyz="0.0"
+        izz="0.001"/>
+    </inertial>
+
+  </link>
+
+
+  <!-- Fixed joint connecting the camera to the base -->
+  <joint name="camera_joint" type="fixed">
+
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+
+    <!-- Camera position at the front of the car -->
+    <origin xyz="1.0 0.0 0.3" rpy="0 0 0"/>
+
+  </joint>
+
+  <!-- ==================== Gazebo Camera Sensor ==================== -->
+
+  <gazebo reference="camera_link">
+
+  <sensor name="front_camera" type="camera">
+
+    <always_on>true</always_on>
+    <visualize>true</visualize>
+    <update_rate>30.0</update_rate>
+
+    <camera>
+      <horizontal_fov>1.047</horizontal_fov>
+
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+
+      <clip>
+        <near>0.1</near>
+        <far>100.0</far>
+      </clip>
+    </camera>
+
+  </sensor>
+
+</gazebo>
+
+<gazebo>
+  <plugin
+    filename="libgz-sim-sensors-system.so"
+    name="gz::sim::systems::Sensors">
+  </plugin>
+</gazebo>
+
+  <!-- ==================== Gazebo Harmonic Diff Drive ==================== -->
+
+<gazebo>
+
+  <plugin
+    filename="libgz-sim-diff-drive-system.so"
+    name="gz::sim::systems::DiffDrive">
+
+    <!-- Wheel joints -->
+    <left_joint>front_left_joint</left_joint>
+    <left_joint>rear_left_joint</left_joint>
+
+    <right_joint>front_right_joint</right_joint>
+    <right_joint>rear_right_joint</right_joint>
+
+    <!-- Wheel dimensions -->
+    <wheel_separation>1.2</wheel_separation>
+    <wheel_radius>0.3</wheel_radius>
+
+    <!-- Topics -->
+    <topic>/cmd_vel</topic>
+    <odom_topic>/odom</odom_topic>
+
+    <!-- Frames -->
+    <frame_id>odom</frame_id>
+    <child_frame_id>base_link</child_frame_id>
+
+  </plugin>
+
+</gazebo>
+  
+
+</robot>
