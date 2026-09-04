@@ -77,6 +77,7 @@ Given constants:
 * Task Description Output: $[1.97, -0.8, 0.29]$
 
 Reason:
-The value $0.29$ in the task prompt corresponds to rotated_z before adding the vertical camera translation offset ($t_z = 0.2\text{ m}$).
+
+The value $0.29$ in the task prompt corresponds to $\text{rotated\_z}$ before adding the vertical camera translation offset ($t_z = 0.2\text{ m}$).
 
 Since the camera is physically mounted $0.2\text{ m}$ higher than the base frame center, adding $t_z$ is required for physical accuracy, which yields the final result of $0.49\text{ m}$.
